@@ -1,0 +1,46 @@
+sdk: "accelerator-sdk.yaml"
+host: "localhost"
+port: 5050
+userName: "Admin"
+organization: "peerorg1"
+batch:
+  - type: "query"
+    channelId: "accelerator"
+    chaincodeName: "fabcar"
+    fcn: "queryCar"
+    queueSize: 1000
+    maxWaitTimeSeconds: 5
+    maxBatchItems: 10
+    recovery: true
+  # - type: "execute"
+  #   channelId: "accelerator"
+  #   chaincodeName: "fabcar"
+  #   fcn: "initLedger"
+  #   queueSize: 1000
+  #   maxWaitTimeSeconds: 5
+  #   maxBatchItems: 10
+  #   recovery: true
+  - type: "execute"
+    channelId: "accelerator"
+    chaincodeName: "fabcar"
+    fcn: "createCar"
+    queueSize: 1000
+    maxWaitTimeSeconds: 5
+    maxBatchItems: 10
+    recovery: true
+  # - type: "query"
+  #   channelId: "accelerator"
+  #   chaincodeName: "fabcar"
+  #   fcn: "queryAllCars"
+  #   queueSize: 1000
+  #   maxWaitTimeSeconds: 5
+  #   maxBatchItems: 10
+  #   recovery: true
+  # - type: "execute"
+  #   channelId: "accelerator"
+  #   chaincodeName: "fabcar"
+  #   fcn: "changeCarOwner"
+  #   queueSize: 1000
+  #   maxWaitTimeSeconds: 5
+  #   maxBatchItems: 10
+  #   recovery: true
