@@ -55,7 +55,7 @@ type Car struct {
  * Best practice is to have any Ledger initialization in separate function -- see initLedger()
  */
  // 인스턴스화할 때 실행되는 함수
-func (t *FabCarChaincode) Init(APIstub shim.ChaincodeStubInterface) pb.Response {
+func (t *FabCarChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	return shim.Success(nil)
 }
 
@@ -65,40 +65,54 @@ func (t *FabCarChaincode) Init(APIstub shim.ChaincodeStubInterface) pb.Response 
  */
  // Function name에 따라 필요한 함수 호출
  // shim.ChaincodeStubInterface 인터페이스는 메서드의 집합(https://godoc.org/gopkg.in/hyperledger/fabric.v1/core/chaincode/shim#ChaincodeStubInterface) 
-func (t *FabCarChaincode) Invoke(APIstub shim.ChaincodeStubInterface) pb.Response {
+func (t *FabCarChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
+
+	fnc := string(stub.GetArgs()[0])
+	switch fnc {
+	case "createCar":
+		return Invoke(stub, t.createCar)
+	case "queryCar":
+		return Invoke(stub, t.queryCar)
+	// case "initLedger":
+	// 	return Invoke(stub, t.initLedger)
+	// case "queryAllCars":
+	// 	return Invoke(stub, t.queryAllCars)
+	case "changeCarOwner":
+		return Invoke(stub, t.changeCarOwner)
+	}
 
 	// Retrieve the requested Smart Contract function and arguments
 	// 2개의 리턴값을 가진 GetFunctionAndParameters()
 	// function: 함수명, args: 인자
-	function, args := APIstub.GetFunctionAndParameters()
+	// function, args := stub.GetFunctionAndParameters()
 	// Route to the appropriate handler function to interact with the ledger appropriately
-	if function == "queryCar" {
-		return t.queryCar(APIstub, args)
-	} else if function == "initLedger" {
-		return t.initLedger(APIstub)
-	} else if function == "createCar" {
-		return t.createCar(APIstub, args)
-	} else if function == "queryAllCars" {
-		return t.queryAllCars(APIstub)
-	} else if function == "changeCarOwner" {
-		return t.changeCarOwner(APIstub, args)
-	}
+	// if function == "queryCar" {
+	// 	return t.queryCar(stub, args)
+	// } else if function == "initLedger" {
+	// 	return t.initLedger(stub)
+	// } else if function == "createCar" {
+	// 	return t.createCar(stub, args)
+	// } else if function == "queryAllCars" {
+	// 	return t.queryAllCars(stub)
+	// } else if function == "changeCarOwner" {
+	// 	return t.changeCarOwner(stub, args)
+	// }
 
 	return shim.Error("Invalid Smart Contract function name.")
 }
 
-func (t *FabCarChaincode) queryCar(APIstub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (t *FabCarChaincode) queryCar(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
 	if len(args) != 1 {
 		return shim.Error("Incorrect number of arguments. Expecting 1")
 	}
 	// string으로 입력받은 첫 번째 인자값을 통해 원장 데이터를 read
 	// 리턴: 데이터, 에러
-	carAsBytes, _ := APIstub.GetState(args[0])
+	carAsBytes, _ := stub.GetState(args[0])
 	return shim.Success(carAsBytes)
 }
 
-func (t *FabCarChaincode) initLedger(APIstub shim.ChaincodeStubInterface) pb.Response {
+func (t *FabCarChaincode) initLedger(stub shim.ChaincodeStubInterface) pb.Response {
 	// Car 구조체 배열 cars 초기화
 	cars := []Car{
 		Car{Make: "Toyota", Model: "Prius", Colour: "blue", Owner: "Tomoko"},
@@ -120,7 +134,7 @@ func (t *FabCarChaincode) initLedger(APIstub shim.ChaincodeStubInterface) pb.Res
 		carAsBytes, _ := json.Marshal(cars[i])
 		// 원장에 데이터 쓰기 (key: CARi, value: cars[i])
 		// strconv.Itoa(): 숫자를 문자열로 변환
-		APIstub.PutState("CAR"+strconv.Itoa(i), carAsBytes)
+		stub.PutState("CAR"+strconv.Itoa(i), carAsBytes)
 		fmt.Println("Added", cars[i])
 		i = i + 1
 	}
@@ -128,8 +142,9 @@ func (t *FabCarChaincode) initLedger(APIstub shim.ChaincodeStubInterface) pb.Res
 	return shim.Success(nil)
 }
 
-func (t *FabCarChaincode) createCar(APIstub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (t *FabCarChaincode) createCar(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
+	fmt.Println(stub, args)
 	if len(args) != 5 {
 		return shim.Error("Incorrect number of arguments. Expecting 5")
 	}
@@ -137,19 +152,21 @@ func (t *FabCarChaincode) createCar(APIstub shim.ChaincodeStubInterface, args []
 	var car = Car{Make: args[1], Model: args[2], Colour: args[3], Owner: args[4]}
 
 	carAsBytes, _ := json.Marshal(car)
-	// 원장에 데이터 쓰기(key: CARi, value: car)
-	APIstub.PutState(args[0], carAsBytes)
+	// 원장에 데이터 쓰기(key: args[0], value: carAsBytes)
+	// key 예: "CAR1"
+	// value 예: "Hyundai","Genesis","Black","Boohyung"
+	stub.PutState(args[0], carAsBytes)
 
 	return shim.Success(nil)
 }
 
-func (t *FabCarChaincode) queryAllCars(APIstub shim.ChaincodeStubInterface) pb.Response {
+func (t *FabCarChaincode) queryAllCars(stub shim.ChaincodeStubInterface) pb.Response {
 
 	startKey := "CAR0"
 	// 끝을 모름
 	endKey := "CAR999"
 	// iteratorInterface 타입의 변수를 리턴
-	resultsIterator, err := APIstub.GetStateByRange(startKey, endKey)
+	resultsIterator, err := stub.GetStateByRange(startKey, endKey)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -193,13 +210,13 @@ func (t *FabCarChaincode) queryAllCars(APIstub shim.ChaincodeStubInterface) pb.R
 	return shim.Success(buffer.Bytes())
 }
 
-func (t *FabCarChaincode) changeCarOwner(APIstub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (t *FabCarChaincode) changeCarOwner(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
 	if len(args) != 2 {
 		return shim.Error("Incorrect number of arguments. Expecting 2")
 	}
 	// key를 입력받아 value를 바이트 형태로 리턴
-	carAsBytes, _ := APIstub.GetState(args[0])
+	carAsBytes, _ := stub.GetState(args[0])
 	car := Car{}
 
 	// json.Unmarshal(): 로우 바이트나 문자열를 구조체로 변경
@@ -207,7 +224,7 @@ func (t *FabCarChaincode) changeCarOwner(APIstub shim.ChaincodeStubInterface, ar
 	car.Owner = args[1]
 
 	carAsBytes, _ = json.Marshal(car)
-	APIstub.PutState(args[0], carAsBytes)
+	stub.PutState(args[0], carAsBytes)
 
 	return shim.Success(nil)
 }

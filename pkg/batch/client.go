@@ -57,11 +57,14 @@ type Client struct {
 // 리턴: 결과, 에러
 func (s *Client) Execute(channelId, chaincodeName, fcn string, args [][]byte) (*tx.Result, error) {
 	name := nameOf(channelId, chaincodeName, fcn)
+	fmt.Println(name)
+	fmt.Println(args)
 	// executeSchedulers 맵에 같은 key가 있는지 확인
 	if scheduler, ok := s.executeSchedulers[name]; !ok {
 		return nil, errors.New("Execute Scheduler not found: " + name)
 	} else {
 		// 없다면 process() 실행
+		fmt.Println("here!!")
 		return process(scheduler, args)
 	}
 }

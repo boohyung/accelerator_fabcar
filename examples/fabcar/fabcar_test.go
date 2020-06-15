@@ -21,7 +21,10 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	// 테스트에서 사용하는 표준 패키지
 	"testing"
+	"log"
+	"time"
 
 	"google.golang.org/grpc"
 
@@ -31,49 +34,29 @@ import (
 const (
 	channelId     = "accelerator"
 	chaincodeName = "fabcar"
-	numOfPings    = 50 // tx 개수
+	numOfPings    = 100 // tx 개수
 	address       = "127.0.0.1:5050" // 서버 주소
 )
 
-func TestAccelerator(t *testing.T) {
-	createCar(t)
-	queryCar(t)
-	// initLedger(t)
-	// queryAllCars(t)
-	// changeCarOwner(t)
 
+func ElapsedTime(tag string, msg string) func() {
+    if msg != "" {
+        log.Printf("[%s] %s", tag, msg)
+    }
+
+    start := time.Now()
+    return func() { log.Printf("[%s] Elapsed Time: %s", tag, time.Since(start)) }
 }
 
+func TestAccelerator(t *testing.T) {
+	// initLedger(t)
+	// queryAllCars(t)
+	createCar(t)
+	changeCarOwner(t)
+	queryCar(t)
+}
 
-
-// func initLedger(t *testing.T) {
-// 	client := pbbatch.NewAcceleratorServiceClient(connect(t))
-// 	notifiers := make([]chan string, numOfPings)
-// 	for i := 0; i < numOfPings; i++ {
-// 		notifier := make(chan string)
-// 		notifiers[i] = notifier
-// 		go func(i int, notifier chan string) {
-// 			req := &pbbatch.TxRequest{
-// 				ChannelId:     channelId,
-// 				ChaincodeName: chaincodeName,
-// 				Fcn:           "initLedger",
-// 				Args:          [][]byte{[]byte(strconv.Itoa(i))},
-// 			}
-// 			resp, err := client.Execute(context.Background(), req)
-// 			if err != nil {
-// 				notifier <- "Failed to execute" + err.Error()
-// 			} else {
-// 				notifier <- strconv.Itoa(i) + ":" + string(resp.Payload)
-// 			}
-// 		}(i, notifier)
-// 	}
-
-// 	for i := 0; i < numOfPings; i++ {
-// 		fmt.Println(<-notifiers[i])
-// 	}
-// }
-
-func createCar(t *testing.T) {
+func initLedger(t *testing.T) {
 	client := pbbatch.NewAcceleratorServiceClient(connect(t))
 	notifiers := make([]chan string, numOfPings)
 	for i := 0; i < numOfPings; i++ {
@@ -83,12 +66,39 @@ func createCar(t *testing.T) {
 			req := &pbbatch.TxRequest{
 				ChannelId:     channelId,
 				ChaincodeName: chaincodeName,
-				Fcn:           "createCar",
-				Args:          [][]byte{[]byte(strconv.Itoa(i))},
+				Fcn:           "initLedger",
+				Args:          [][]byte{},
 			}
 			resp, err := client.Execute(context.Background(), req)
 			if err != nil {
 				notifier <- "Failed to execute" + err.Error()
+			} else {
+				notifier <- strconv.Itoa(i) + ":" + resp.TxId
+			}
+		}(i, notifier)
+	}
+
+	for i := 0; i < numOfPings; i++ {
+		fmt.Println(<-notifiers[i])
+	}
+}
+
+func queryAllCars(t *testing.T) {
+	client := pbbatch.NewAcceleratorServiceClient(connect(t))
+	notifiers := make([]chan string, numOfPings)
+	for i := 0; i < numOfPings; i++ {
+		notifier := make(chan string)
+		notifiers[i] = notifier
+		go func(i int, notifier chan string) {
+			req := &pbbatch.TxRequest{
+				ChannelId:     channelId,
+				ChaincodeName: chaincodeName,
+				Fcn:           "queryAllCars",
+				Args:          [][]byte{},
+			}
+			resp, err := client.Query(context.Background(), req)
+			if err != nil {
+				notifier <- "Failed to query" + err.Error()
 			} else {
 				notifier <- strconv.Itoa(i) + ":" + string(resp.Payload)
 			}
@@ -100,7 +110,41 @@ func createCar(t *testing.T) {
 	}
 }
 
+func createCar(t *testing.T) {
+
+	defer ElapsedTime("createCar", "start")()
+
+	client := pbbatch.NewAcceleratorServiceClient(connect(t))
+	notifiers := make([]chan string, numOfPings)
+	for i := 0; i < numOfPings; i++ {
+		notifier := make(chan string)
+		notifiers[i] = notifier
+		go func(i int, notifier chan string) {
+			req := &pbbatch.TxRequest{
+				ChannelId:     channelId,
+				ChaincodeName: chaincodeName,
+				Fcn:           "createCar",
+				Args:          [][]byte{[]byte("CAR"+strconv.Itoa(i)), []byte("Make"+strconv.Itoa(i)), []byte("Model"+strconv.Itoa(i)), []byte("Colour"+strconv.Itoa(i)), []byte("Owner"+strconv.Itoa(i))},
+			}
+			resp, err := client.Execute(context.Background(), req)
+			// fmt.Println(req) // print ok
+			// fmt.Println(resp) // print ok
+			if err != nil {
+				notifier <- "Failed to execute" + err.Error()
+			} else {
+				notifier <- "TxId of CAR"+ strconv.Itoa(i) + ":" + resp.TxId
+			}
+		}(i, notifier)
+	}
+	for i := 0; i < numOfPings; i++ {
+		fmt.Println(<-notifiers[i])
+	}
+}
+
 func queryCar(t *testing.T) {
+
+	defer ElapsedTime("queryCar", "start")()
+
 	client := pbbatch.NewAcceleratorServiceClient(connect(t))
 	notifiers := make([]chan string, numOfPings)
 	for i := 0; i < numOfPings; i++ {
@@ -111,13 +155,14 @@ func queryCar(t *testing.T) {
 				ChannelId:     channelId,
 				ChaincodeName: chaincodeName,
 				Fcn:           "queryCar",
-				Args:          [][]byte{[]byte(strconv.Itoa(i)), []byte("value of " + strconv.Itoa(i))},
+				Args:          [][]byte{[]byte("CAR"+strconv.Itoa(i))},
 			}
 			resp, err := client.Query(context.Background(), req)
+			// fmt.Println(resp.Payload)
 			if err != nil {
 				notifier <- "Failed to query" + err.Error()
 			} else {
-				notifier <- strconv.Itoa(i) + ":" + resp.TxId
+				notifier <- "CAR"+ strconv.Itoa(i) + ":" + string(resp.Payload)
 			}
 		}(i, notifier)
 	}
@@ -126,59 +171,36 @@ func queryCar(t *testing.T) {
 		fmt.Println(<-notifiers[i])
 	}
 }
-// func queryAllCars(t *testing.T) {
-// 	client := pbbatch.NewAcceleratorServiceClient(connect(t))
-// 	notifiers := make([]chan string, numOfPings)
-// 	for i := 0; i < numOfPings; i++ {
-// 		notifier := make(chan string)
-// 		notifiers[i] = notifier
-// 		go func(i int, notifier chan string) {
-// 			req := &pbbatch.TxRequest{
-// 				ChannelId:     channelId,
-// 				ChaincodeName: chaincodeName,
-// 				Fcn:           "queryAllCars",
-// 				Args:          [][]byte{[]byte(strconv.Itoa(i))},
-// 			}
-// 			resp, err := client.Query(context.Background(), req)
-// 			if err != nil {
-// 				notifier <- "Failed to query" + err.Error()
-// 			} else {
-// 				notifier <- strconv.Itoa(i) + ":" + string(resp.Payload)
-// 			}
-// 		}(i, notifier)
-// 	}
 
-// 	for i := 0; i < numOfPings; i++ {
-// 		fmt.Println(<-notifiers[i])
-// 	}
-// }
+func changeCarOwner(t *testing.T) {
 
-// func changeCarOwner(t *testing.T) {
-// 	client := pbbatch.NewAcceleratorServiceClient(connect(t))
-// 	notifiers := make([]chan string, numOfPings)
-// 	for i := 0; i < numOfPings; i++ {
-// 		notifier := make(chan string)
-// 		notifiers[i] = notifier
-// 		go func(i int, notifier chan string) {
-// 			req := &pbbatch.TxRequest{
-// 				ChannelId:     channelId,
-// 				ChaincodeName: chaincodeName,
-// 				Fcn:           "changeCarOwner",
-// 				Args:          [][]byte{[]byte(strconv.Itoa(i))},
-// 			}
-// 			resp, err := client.Execute(context.Background(), req)
-// 			if err != nil {
-// 				notifier <- "Failed to execute" + err.Error()
-// 			} else {
-// 				notifier <- strconv.Itoa(i) + ":" + string(resp.Payload)
-// 			}
-// 		}(i, notifier)
-// 	}
+	defer ElapsedTime("changeCarOwner", "start")()
 
-// 	for i := 0; i < numOfPings; i++ {
-// 		fmt.Println(<-notifiers[i])
-// 	}
-// }
+	client := pbbatch.NewAcceleratorServiceClient(connect(t))
+	notifiers := make([]chan string, numOfPings)
+	for i := 0; i < numOfPings; i++ {
+		notifier := make(chan string)
+		notifiers[i] = notifier
+		go func(i int, notifier chan string) {
+			req := &pbbatch.TxRequest{
+				ChannelId:     channelId,
+				ChaincodeName: chaincodeName,
+				Fcn:           "changeCarOwner",
+				Args:          [][]byte{[]byte("CAR"+strconv.Itoa(i)), []byte("Owner"+strconv.Itoa(i+1))},
+			}
+			resp, err := client.Execute(context.Background(), req)
+			if err != nil {
+				notifier <- "Failed to execute" + err.Error()
+			} else {
+				notifier <- "TxId of CAR"+ strconv.Itoa(i) + ":" + resp.TxId
+			}
+		}(i, notifier)
+	}
+
+	for i := 0; i < numOfPings; i++ {
+		fmt.Println(<-notifiers[i])
+	}
+}
 
 func connect(t *testing.T) *grpc.ClientConn {
 	cc, err := grpc.Dial(address, grpc.WithInsecure())

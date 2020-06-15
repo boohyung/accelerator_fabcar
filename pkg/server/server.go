@@ -73,8 +73,10 @@ func (s *Server) Stop() {
 }
 // Server 구조체에 Execute 메서드 연결. s는 포인터 리시버로 사용
 func (s *Server) Execute(ctx context.Context, req *protos.TxRequest) (*protos.TxResponse, error) {
+	fmt.Println(ctx, req)
 	// accelerator/pkg/batch/client.go의 Execute()를 호출
 	result, err := s.client.Execute(req.ChannelId, req.ChaincodeName, req.Fcn, req.Args)
+	fmt.Println(result)
 	if err != nil {
 		return nil, err
 	}

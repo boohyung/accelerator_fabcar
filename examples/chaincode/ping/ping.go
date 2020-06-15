@@ -42,9 +42,13 @@ func (t *PingPongChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response
 }
 
 func (t *PingPongChaincode) ping(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	// key: args[0], value: args[1]
+	// 원장에 어떻게 저장되나?
 	if err := stub.PutState(args[0], []byte(args[1])); err != nil {
 		return shim.Error(err.Error())
 	} else {
+		// fmt.Println(args[0])
+		// fmt.Println(args[1])
 		return shim.Success(nil)
 	}
 }

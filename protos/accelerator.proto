@@ -1,27 +1,31 @@
+// 프로토콜 버퍼 메시지 타입 정의
+// Proto3 Langauge Guide: https://developers.google.com/protocol-buffers/docs/proto3
 syntax = "proto3";
 
 option go_package = "github.com/nexledger/accelerator/protos";
 
+// RPC service 인터페이스 정의
+// 프로토콜 버퍼 컴파일러가 서비스 인터페이스 코드와 stub을 발생시켜줌
 service AcceleratorService {
     rpc Execute (TxRequest) returns (TxResponse) {
     }
     rpc Query (TxRequest) returns (TxResponse) {
     }
 }
-
+// 요청 메시지 포맷 정의
 message TxRequest {
     string channelId = 1;
     string chaincodeName = 2;
     string fcn = 3;
     repeated bytes args = 4;
 }
-
+// 응답 메시지 포맷 정의
 message TxResponse {
     bytes payload = 1;
     string txId = 2;
     TransactionValidation validation = 3;
 }
-
+// TX검증 메시지 포맷 정의
 message TransactionValidation {
     int32 code = 1;
     string description = 2;

@@ -16,7 +16,7 @@ docker exec -e "CORE_PEER_ADDRESS=peer1.peerorg1:7051" cli peer chaincode instal
 docker exec -e "CORE_PEER_ADDRESS=peer2.peerorg1:7051" cli peer chaincode install -n fabcar -p fabcar -v 1.0
 
 # Instantiate the fabcar chaincode
-docker exec -e "CORE_PEER_ADDRESS=peer1.peerorg1:7051" cli peer chaincode instantiate -C accelerator -n fabcar -v 1.0 -c '{"Args":["init"]}' -o orderer1.ordererorg1:7050
-docker exec -e "CORE_PEER_ADDRESS=peer2.peerorg1:7051" cli peer chaincode instantiate -C accelerator -n fabcar -v 1.0 -c '{"Args":["init"]}' -o orderer1.ordererorg1:7050
+docker exec -e "CORE_PEER_ADDRESS=peer1.peerorg1:7051" cli peer chaincode instantiate -C accelerator -n fabcar -v 1.0 -c '{"Args":[]}' -o orderer1.ordererorg1:7050
+docker exec -e "CORE_PEER_ADDRESS=peer2.peerorg1:7051" cli peer chaincode instantiate -C accelerator -n fabcar -v 1.0 -c '{"Args":[]}' -o orderer1.ordererorg1:7050
 
 cd -
