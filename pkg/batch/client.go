@@ -64,7 +64,6 @@ func (s *Client) Execute(channelId, chaincodeName, fcn string, args [][]byte) (*
 		return nil, errors.New("Execute Scheduler not found: " + name)
 	} else {
 		// 없다면 process() 실행
-		fmt.Println("here!!")
 		return process(scheduler, args)
 	}
 }
