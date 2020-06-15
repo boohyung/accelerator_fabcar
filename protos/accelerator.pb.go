@@ -23,6 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+// 요청 메시지 구조 정의
 type TxRequest struct {
 	ChannelId            string   `protobuf:"bytes,1,opt,name=channelId" json:"channelId,omitempty"`
 	ChaincodeName        string   `protobuf:"bytes,2,opt,name=chaincodeName" json:"chaincodeName,omitempty"`
@@ -84,7 +85,7 @@ func (m *TxRequest) GetArgs() [][]byte {
 	}
 	return nil
 }
-
+// 응답 메시지 구조 정의
 type TxResponse struct {
 	Payload              []byte                 `protobuf:"bytes,1,opt,name=payload,proto3" json:"payload,omitempty"`
 	TxId                 string                 `protobuf:"bytes,2,opt,name=txId" json:"txId,omitempty"`
@@ -202,6 +203,8 @@ const _ = grpc.SupportPackageIsVersion4
 // AcceleratorServiceClient is the client API for AcceleratorService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+
+// 프로토콜 버퍼 컴파일러에 의해 생성된 RPC 서비스 인터페이스
 type AcceleratorServiceClient interface {
 	Execute(ctx context.Context, in *TxRequest, opts ...grpc.CallOption) (*TxResponse, error)
 	Query(ctx context.Context, in *TxRequest, opts ...grpc.CallOption) (*TxResponse, error)
@@ -216,7 +219,11 @@ func NewAcceleratorServiceClient(cc *grpc.ClientConn) AcceleratorServiceClient {
 }
 
 func (c *acceleratorServiceClient) Execute(ctx context.Context, in *TxRequest, opts ...grpc.CallOption) (*TxResponse, error) {
+	// fmt.Println(ctx, in, opts) // ok
+	// 응답을 넣을 TxResponse 타입의 객체 out 생성
 	out := new(TxResponse)
+	// Invoke() 정의: https://godoc.org/google.golang.org/grpc
+	// "AcceleratorService/Execute": accelerator.proto에 정의되어 있는 서비스/메서드
 	err := c.cc.Invoke(ctx, "/AcceleratorService/Execute", in, out, opts...)
 	if err != nil {
 		return nil, err

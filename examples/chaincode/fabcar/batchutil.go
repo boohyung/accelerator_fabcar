@@ -25,6 +25,7 @@ import (
 )
 
 func Invoke(stub shim.ChaincodeStubInterface, target func(shim.ChaincodeStubInterface, []string) pb.Response) pb.Response {
+	// 3중 배열 선언
 	items := make([][][]byte, 0)
 	if err := decode(stub.GetArgs()[1], &items); err != nil {
 		return shim.Error("Failed to unmarshal request")
@@ -52,6 +53,30 @@ func Invoke(stub shim.ChaincodeStubInterface, target func(shim.ChaincodeStubInte
 	}
 	return shim.Success(response)
 }
+
+// func Invoke_no_arg(stub shim.ChaincodeStubInterface, target func(shim.ChaincodeStubInterface)) pb.Response {
+// 	items := make([][][]byte, 0)
+// 	if err := decode(stub.GetArgs()[1], &items); err != nil {
+// 		return shim.Error("Failed to unmarshal request")
+// 	}
+
+// 	itemSize := len(items)
+// 	payloads := make([][]byte, itemSize, itemSize)
+// 	for i, item := range items {
+
+// 		result := target(stub)
+// 		if result.Status == shim.ERROR {
+// 			return shim.Error("Failed to invoke: " + result.Message)
+// 		}
+// 		payloads[i] = result.Payload
+// 	}
+
+// 	response, err := encode(payloads)
+// 	if err != nil {
+// 		return shim.Error("Failed to marshal response")
+// 	}
+// 	return shim.Success(response)
+// }
 
 func encode(v interface{}) ([]byte, error) {
 	buf := new(bytes.Buffer)
