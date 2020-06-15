@@ -54,14 +54,17 @@ func ElapsedTime(tag string, msg string) func() {
 }
 
 func TestAccelerator(t *testing.T) {
-	// initLedger(t)
-	// queryAllCars(t)
-	createCar(t)
-	changeCarOwner(t)
-	queryCar(t)
+	initLedger(t)	// 초기화 목적으로 10개의 key:value pair를 원장에 write 
+	createCar(t) 	// 1개의 key:value pair를 원장에 write 
+	queryCar(t) 	// 원장에서 1개의 key를 기준으로 value를 read
+	changeCarOwner(t) 	// 1개의 key를 기준으로 특정 value를 원장에 write(modify)
+	queryAllCars(t)		// 원장에 저장된 모든 key:value를 read(최대 1000개)
 }
 
 func initLedger(t *testing.T) {
+
+	defer ElapsedTime("initLedger", "start")()
+
 	client := pbbatch.NewAcceleratorServiceClient(connect(t))
 	notifiers := make([]chan string, numOfPings)
 	for i := 0; i < numOfPings; i++ {
@@ -89,6 +92,9 @@ func initLedger(t *testing.T) {
 }
 
 func queryAllCars(t *testing.T) {
+
+	defer ElapsedTime("queryAllCars", "start")()
+
 	client := pbbatch.NewAcceleratorServiceClient(connect(t))
 	notifiers := make([]chan string, numOfPings)
 	for i := 0; i < numOfPings; i++ {
@@ -99,13 +105,13 @@ func queryAllCars(t *testing.T) {
 				ChannelId:     channelId,
 				ChaincodeName: chaincodeName,
 				Fcn:           "queryAllCars",
-				Args:          [][]byte{},
+				// Args:          [][]byte{},
 			}
 			resp, err := client.Query(context.Background(), req)
 			if err != nil {
 				notifier <- "Failed to query" + err.Error()
 			} else {
-				notifier <- strconv.Itoa(i) + ":" + string(resp.Payload)
+				notifier <- strconv.Itoa(i) + ":" + resp.TxId
 			}
 		}(i, notifier)
 	}

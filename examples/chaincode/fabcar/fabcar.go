@@ -73,10 +73,10 @@ func (t *FabCarChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return Invoke(stub, t.createCar)
 	case "queryCar":
 		return Invoke(stub, t.queryCar)
-	// case "initLedger":
-	// 	return Invoke(stub, t.initLedger)
-	// case "queryAllCars":
-	// 	return Invoke(stub, t.queryAllCars)
+	case "initLedger":
+		return Invoke_no_arg(stub, t.initLedger)
+	case "queryAllCars":
+		return Invoke_no_arg(stub, t.queryAllCars)
 	case "changeCarOwner":
 		return Invoke(stub, t.changeCarOwner)
 	}
@@ -100,7 +100,7 @@ func (t *FabCarChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	return shim.Error("Invalid Smart Contract function name.")
 }
-
+// 파라미터: 함수 이름, 해당 함수의 인자
 func (t *FabCarChaincode) queryCar(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
 	if len(args) != 1 {
@@ -206,7 +206,7 @@ func (t *FabCarChaincode) queryAllCars(stub shim.ChaincodeStubInterface) pb.Resp
 	buffer.WriteString("]")
 
 	fmt.Printf("- queryAllCars:\n%s\n", buffer.String())
-
+	// Bytes(): 버퍼를 바이트로 변환
 	return shim.Success(buffer.Bytes())
 }
 
