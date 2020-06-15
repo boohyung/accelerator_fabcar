@@ -38,13 +38,18 @@ const (
 	address       = "127.0.0.1:5050" // 서버 주소
 )
 
-
+ /**
+  * @dev 메서드의 실행 시간을 측정한다.
+  * @param tag 메서드 이름, msg 메시지
+  * @return 익명 함수를 통해 경과 시간을 리턴
+  */
 func ElapsedTime(tag string, msg string) func() {
     if msg != "" {
         log.Printf("[%s] %s", tag, msg)
     }
-
-    start := time.Now()
+	// 현재 = 시작 시간
+	start := time.Now()
+	// 경과 시간
     return func() { log.Printf("[%s] Elapsed Time: %s", tag, time.Since(start)) }
 }
 
