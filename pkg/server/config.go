@@ -45,7 +45,7 @@ type Config struct {
 
 func (c *Config) BatchClient() (*batch.Client, error) {
 	var accs []*batch.Acceleration
-	for _, configs := range c.Batch {
+	for _, configs := range c.Batch { // batch section에 정의한 item을 열거
 		for _, k := range []string{"type", "channelId", "chaincodeName", "fcn"} {
 			if _, ok := configs[k]; !ok {
 				return nil, errors.New(k + " doesn't exist in config")

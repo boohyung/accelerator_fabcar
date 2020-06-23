@@ -17,7 +17,7 @@ require (
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/mock v1.2.0
-	github.com/golang/protobuf v1.3.1
+	github.com/golang/protobuf v1.3.2
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/certificate-transparency-go v1.0.21 // indirect
 	github.com/google/pprof v0.0.0-20190309163659-77426154d546 // indirect
@@ -26,8 +26,9 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.8.5 // indirect
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
-	github.com/hyperledger/fabric v1.4.0
+	github.com/hyperledger/fabric v1.2.2-0.20190708160210-aabf3a63282e
 	github.com/hyperledger/fabric-amcl v0.0.0-20181230093703-5ccba6eab8d6 // indirect
+	github.com/hyperledger/fabric-chaincode-go v0.0.0-20200511190512-bcfeb58dd83a // indirect
 	github.com/hyperledger/fabric-lib-go v1.0.0 // indirect
 	github.com/hyperledger/fabric-sdk-go v1.0.0-alpha4.0.20190306235112-f198238ee7da
 	github.com/kisielk/errcheck v1.2.0 // indirect
@@ -48,7 +49,7 @@ require (
 	github.com/spf13/afero v1.2.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.3.2 // indirect
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.4.0
 	github.com/ugorji/go/codec v0.0.0-20190316192920-e2bddce071ad // indirect
 	go.uber.org/atomic v1.3.2 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
@@ -61,9 +62,8 @@ require (
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/perf v0.0.0-20190312170614-0655857e383f // indirect
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
-	google.golang.org/grpc v1.19.0
+	google.golang.org/grpc v1.23.0
 	gopkg.in/yaml.v2 v2.2.2
-	honnef.co/go/tools v0.0.0-20190319011948-d116c56a00f3 // indirect
 )
 
 replace github.com/golang/lint => golang.org/x/lint v0.0.0-20200302205851-738671d3881b

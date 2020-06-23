@@ -21,9 +21,10 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+
 	// 테스트에서 사용하는 표준 패키지
-	"testing"
 	"log"
+	"testing"
 	"time"
 
 	"google.golang.org/grpc"
@@ -34,31 +35,32 @@ import (
 const (
 	channelId     = "accelerator"
 	chaincodeName = "fabcar"
-	numOfPings    = 100 // tx 개수
+	numOfPings    = 1000             // tx 개수
 	address       = "127.0.0.1:5050" // 서버 주소
 )
 
- /**
-  * @dev 메서드의 실행 시간을 측정한다.
-  * @param tag 메서드 이름, msg 메시지
-  * @return 익명 함수를 통해 경과 시간을 리턴
-  */
+/**
+ * @dev 메서드의 실행 시간을 측정한다.
+ * @param tag 메서드 이름, msg 메시지
+ * @return 익명 함수를 통해 경과 시간을 리턴
+ */
 func ElapsedTime(tag string, msg string) func() {
-    if msg != "" {
-        log.Printf("[%s] %s", tag, msg)
-    }
+	if msg != "" {
+		log.Printf("[%s] %s", tag, msg)
+	}
 	// 현재 = 시작 시간
 	start := time.Now()
 	// 경과 시간
-    return func() { log.Printf("[%s] Elapsed Time: %s", tag, time.Since(start)) }
+	return func() { log.Printf("[%s] Elapsed Time: %s", tag, time.Since(start)) }
 }
 
 func TestAccelerator(t *testing.T) {
-	initLedger(t)	// 초기화 목적으로 10개의 key:value pair를 원장에 write 
-	createCar(t) 	// 1개의 key:value pair를 원장에 write 
-	queryCar(t) 	// 원장에서 1개의 key를 기준으로 value를 read
-	changeCarOwner(t) 	// 1개의 key를 기준으로 특정 value를 원장에 write(modify)
-	queryAllCars(t)		// 원장에 저장된 모든 key:value를 read(최대 1000개)
+
+	initLedger(t)     // 초기화 목적으로 10개의 key:value pair를 원장에 write
+	createCar(t)      // 1개의 key:value pair를 원장에 write
+	queryCar(t)       // 원장에서 1개의 key를 기준으로 value를 read
+	changeCarOwner(t) // 1개의 key를 기준으로 특정 value를 원장에 write(modify)
+	queryAllCars(t)   // 원장에 저장된 모든 key:value를 read(최대 1000개)
 }
 
 func initLedger(t *testing.T) {
@@ -75,13 +77,12 @@ func initLedger(t *testing.T) {
 				ChannelId:     channelId,
 				ChaincodeName: chaincodeName,
 				Fcn:           "initLedger",
-				Args:          [][]byte{},
 			}
 			resp, err := client.Execute(context.Background(), req)
 			if err != nil {
 				notifier <- "Failed to execute" + err.Error()
 			} else {
-				notifier <- strconv.Itoa(i) + ":" + resp.TxId
+				notifier <- "TxId: " + resp.TxId
 			}
 		}(i, notifier)
 	}
@@ -89,6 +90,8 @@ func initLedger(t *testing.T) {
 	for i := 0; i < numOfPings; i++ {
 		fmt.Println(<-notifiers[i])
 	}
+	// fmt.Println(<-notifier)
+
 }
 
 func queryAllCars(t *testing.T) {
@@ -96,29 +99,23 @@ func queryAllCars(t *testing.T) {
 	defer ElapsedTime("queryAllCars", "start")()
 
 	client := pbbatch.NewAcceleratorServiceClient(connect(t))
-	notifiers := make([]chan string, numOfPings)
-	for i := 0; i < numOfPings; i++ {
-		notifier := make(chan string)
-		notifiers[i] = notifier
-		go func(i int, notifier chan string) {
-			req := &pbbatch.TxRequest{
-				ChannelId:     channelId,
-				ChaincodeName: chaincodeName,
-				Fcn:           "queryAllCars",
-				// Args:          [][]byte{},
-			}
-			resp, err := client.Query(context.Background(), req)
-			if err != nil {
-				notifier <- "Failed to query" + err.Error()
-			} else {
-				notifier <- strconv.Itoa(i) + ":" + resp.TxId
-			}
-		}(i, notifier)
-	}
+	notifier := make(chan string)
+	go func(notifier chan string) {
+		req := &pbbatch.TxRequest{
+			ChannelId:     channelId,
+			ChaincodeName: chaincodeName,
+			Fcn:           "queryAllCars",
+		}
+		resp, err := client.Query(context.Background(), req)
 
-	for i := 0; i < numOfPings; i++ {
-		fmt.Println(<-notifiers[i])
-	}
+		if err != nil {
+			notifier <- "Failed to query" + err.Error()
+		} else {
+			notifier <- string(resp.Payload)
+		}
+	}(notifier)
+	fmt.Println(<-notifier)
+
 }
 
 func createCar(t *testing.T) {
@@ -135,15 +132,13 @@ func createCar(t *testing.T) {
 				ChannelId:     channelId,
 				ChaincodeName: chaincodeName,
 				Fcn:           "createCar",
-				Args:          [][]byte{[]byte("CAR"+strconv.Itoa(i)), []byte("Make"+strconv.Itoa(i)), []byte("Model"+strconv.Itoa(i)), []byte("Colour"+strconv.Itoa(i)), []byte("Owner"+strconv.Itoa(i))},
+				Args:          [][]byte{[]byte("CAR" + strconv.Itoa(i)), []byte("Make" + strconv.Itoa(i)), []byte("Model" + strconv.Itoa(i)), []byte("Colour" + strconv.Itoa(i)), []byte("Owner" + strconv.Itoa(i))},
 			}
 			resp, err := client.Execute(context.Background(), req)
-			// fmt.Println(req) // print ok
-			// fmt.Println(resp) // print ok
 			if err != nil {
 				notifier <- "Failed to execute" + err.Error()
 			} else {
-				notifier <- "TxId of CAR"+ strconv.Itoa(i) + ":" + resp.TxId
+				notifier <- "TxId of CAR" + strconv.Itoa(i) + ":" + resp.TxId
 			}
 		}(i, notifier)
 	}
@@ -166,14 +161,14 @@ func queryCar(t *testing.T) {
 				ChannelId:     channelId,
 				ChaincodeName: chaincodeName,
 				Fcn:           "queryCar",
-				Args:          [][]byte{[]byte("CAR"+strconv.Itoa(i))},
+				Args:          [][]byte{[]byte("CAR" + strconv.Itoa(i))},
 			}
 			resp, err := client.Query(context.Background(), req)
 			// fmt.Println(resp.Payload)
 			if err != nil {
 				notifier <- "Failed to query" + err.Error()
 			} else {
-				notifier <- "CAR"+ strconv.Itoa(i) + ":" + string(resp.Payload)
+				notifier <- "CAR" + strconv.Itoa(i) + ":" + string(resp.Payload)
 			}
 		}(i, notifier)
 	}
@@ -197,13 +192,13 @@ func changeCarOwner(t *testing.T) {
 				ChannelId:     channelId,
 				ChaincodeName: chaincodeName,
 				Fcn:           "changeCarOwner",
-				Args:          [][]byte{[]byte("CAR"+strconv.Itoa(i)), []byte("Owner"+strconv.Itoa(i+1))},
+				Args:          [][]byte{[]byte("CAR" + strconv.Itoa(i)), []byte("Owner" + strconv.Itoa(i+1))},
 			}
 			resp, err := client.Execute(context.Background(), req)
 			if err != nil {
 				notifier <- "Failed to execute" + err.Error()
 			} else {
-				notifier <- "TxId of CAR"+ strconv.Itoa(i) + ":" + resp.TxId
+				notifier <- "TxId of CAR" + strconv.Itoa(i) + ":" + resp.TxId
 			}
 		}(i, notifier)
 	}
